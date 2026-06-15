@@ -3,7 +3,7 @@ RestoPulse v4.0 - Streamlit App
 1 yulduzdan 5 yulduzgacha sentiment, aspekt tahlili, diagrammalar
 """
 
-import os, json, pickle
+import os, json, pickle, re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -334,8 +334,10 @@ def detect_aspects(text: str, score: int = None):
                 for char in ["’", "‘", "ʻ", "ʼ", "´", "`"]:
                     text_lower = text_lower.replace(char, "'")
                 
+                # Match keywords as whole words to avoid sub-word matching (like "zal" in "mazali")
                 for kw in ASPECT_KEYWORDS.get(asp, []):
-                    if kw in text_lower:
+                    pattern = rf"(?<![a-zA-Z']){re.escape(kw)}(?![a-zA-Z'])"
+                    if re.search(pattern, text_lower):
                         matched_words.append(kw)
                 
                 display_word = matched_words[0] if matched_words else ASPECT_META.get(asp, {"label": asp})["label"].lower()

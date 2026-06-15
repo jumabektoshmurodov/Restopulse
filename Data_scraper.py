@@ -24,7 +24,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # ─────────────────────────────────────────
 
 SEARCH_QUERIES = [
-    "Besh Qozon Pilaf Center"
+    "Jiyda milliy taomlari"
 ]
 
 MAX_PLACES_PER_QUERY  = 5  # Har qidiruv uchun joylar soni
