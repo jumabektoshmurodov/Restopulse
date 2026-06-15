@@ -350,14 +350,17 @@ def detect_aspects(text: str, score: int = None):
                 elif score <= 2:
                     complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
                 else:
-                    # 3 stars: check if we match negative keywords
+                    # 3 stars: check if we match negative keywords/phrases in the raw text
                     is_neg = False
-                    for w in matched_words:
-                        if w in WORD_MAP and WORD_MAP[w][1] == "neg":
-                            is_neg = True
-                            break
+                    neg_word = display_word
+                    for phrase, (asp_map, polarity) in WORD_MAP.items():
+                        if asp_map == asp and polarity == "neg":
+                            if phrase in text_lower:
+                                is_neg = True
+                                neg_word = phrase
+                                break
                     if is_neg:
-                        complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
+                        complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": neg_word})
                     else:
                         praises.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
                         
