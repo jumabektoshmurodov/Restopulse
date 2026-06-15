@@ -220,7 +220,7 @@ else:
 # Aspect labels translation
 ASPECT_META_UZ = {
     "taom":      {"icon": "🍽️", "label": "Taom sifati"},
-    "xizmat":    {"icon": "👨‍🍳", "label": "Xizmat sifati"},
+    "xizmat":    {"icon": "👨🍳", "label": "Xizmat sifati"},
     "narx":      {"icon": "💰",  "label": "Narx / Qiymat"},
     "muhit":     {"icon": "🏮",  "label": "Muhit / Atmosfera"},
     "tozalik":   {"icon": "✨",  "label": "Tozalik"},
@@ -229,7 +229,7 @@ ASPECT_META_UZ = {
 
 ASPECT_META_EN = {
     "taom":      {"icon": "🍽️", "label": "Food Quality"},
-    "xizmat":    {"icon": "👨‍🍳", "label": "Service Quality"},
+    "xizmat":    {"icon": "👨🍳", "label": "Service Quality"},
     "narx":      {"icon": "💰",  "label": "Price / Value"},
     "muhit":     {"icon": "🏮",  "label": "Atmosphere / Vibe"},
     "tozalik":   {"icon": "✨",  "label": "Cleanliness"},
@@ -785,7 +785,6 @@ with tab1:
                     st.plotly_chart(fig2, use_container_width=True)
 
                 # Aspekt shikoyat/maqtov
-                col_c, col_d = st.columns(2)
                 asp_neg, asp_pos = {}, {}
                 for _, row in df_up.iterrows():
                     _, comps, praisez = detect_aspects(str(row["Review_Text"]))
@@ -794,33 +793,52 @@ with tab1:
                     for p in praisez:
                         asp_pos[p["aspect"]] = asp_pos.get(p["aspect"],0)+1
 
-                with col_c:
-                    st.markdown(f"**{t('chart_complaints_by_aspect')}**")
-                    if asp_neg:
-                        df_neg = pd.DataFrame({"Soha":list(asp_neg.keys()),"Soni":list(asp_neg.values())}).sort_values("Soni")
-                        fig3 = go.Figure(go.Bar(x=df_neg["Soni"],y=df_neg["Soha"],orientation="h",
-                            marker_color="#C0392B",text=df_neg["Soni"],textposition="outside",
-                            textfont=dict(color="#e8eaf0")))
-                        fig3.update_layout(height=260,margin=dict(t=5,b=5,l=5,r=50),
-                            paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(color="#e8eaf0"),xaxis=dict(gridcolor="#2a3045"),yaxis=dict(gridcolor="#2a3045"))
-                        st.plotly_chart(fig3, use_container_width=True)
-                    else:
-                        st.info(t("no_complaints"))
+                # ── Diverging chart: aspekt bo'yicha Salbiy <-> Ijobiy ──
+                st.markdown(f"**{t('aspect_sentiment_title')}**")
+                all_aspects = sorted(set(asp_neg.keys()) | set(asp_pos.keys()))
+                if all_aspects:
+                    neg_vals = [-asp_neg.get(a, 0) for a in all_aspects]
+                    pos_vals = [asp_pos.get(a, 0) for a in all_aspects]
+                    totals = [asp_neg.get(a,0) + asp_pos.get(a,0) for a in all_aspects]
 
-                with col_d:
-                    st.markdown(f"**{t('chart_praises_by_aspect')}**")
-                    if asp_pos:
-                        df_pos = pd.DataFrame({"Soha":list(asp_pos.keys()),"Soni":list(asp_pos.values())}).sort_values("Soni")
-                        fig4 = go.Figure(go.Bar(x=df_pos["Soni"],y=df_pos["Soha"],orientation="h",
-                            marker_color="#27AE60",text=df_pos["Soni"],textposition="outside",
-                            textfont=dict(color="#e8eaf0")))
-                        fig4.update_layout(height=260,margin=dict(t=5,b=5,l=5,r=50),
-                            paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(color="#e8eaf0"),xaxis=dict(gridcolor="#2a3045"),yaxis=dict(gridcolor="#2a3045"))
-                        st.plotly_chart(fig4, use_container_width=True)
-                    else:
-                        st.info(t("no_praise"))
+                    # Eng ko'p tilga olingan aspekt yuqorida bo'lsin
+                    order = sorted(range(len(all_aspects)), key=lambda i: totals[i])
+                    all_aspects = [all_aspects[i] for i in order]
+                    neg_vals = [neg_vals[i] for i in order]
+                    pos_vals = [pos_vals[i] for i in order]
+
+                    fig_div = go.Figure()
+                    fig_div.add_trace(go.Bar(
+                        x=neg_vals, y=all_aspects, orientation="h", name=t("aspect_negative"),
+                        marker_color="#C0392B",
+                        text=[str(-v) if v != 0 else "" for v in neg_vals],
+                        textposition="outside", textfont=dict(color="#e8eaf0")
+                    ))
+                    fig_div.add_trace(go.Bar(
+                        x=pos_vals, y=all_aspects, orientation="h", name=t("aspect_positive"),
+                        marker_color="#27AE60",
+                        text=[str(v) if v != 0 else "" for v in pos_vals],
+                        textposition="outside", textfont=dict(color="#e8eaf0")
+                    ))
+                    max_range = max([abs(v) for v in neg_vals + pos_vals] + [1]) * 1.25
+                    fig_div.update_layout(
+                        height=120 + len(all_aspects) * 45,
+                        barmode="overlay",
+                        margin=dict(t=10, b=10, l=5, r=40),
+                        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#e8eaf0"),
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+                        xaxis=dict(
+                            title=t("xaxis_sentiment"),
+                            range=[-max_range, max_range],
+                            gridcolor="#2a3045",
+                            zeroline=True, zerolinecolor="#95a5a6", zerolinewidth=2
+                        ),
+                        yaxis=dict(gridcolor="#2a3045"),
+                    )
+                    st.plotly_chart(fig_div, use_container_width=True)
+                else:
+                    st.info(t("aspects_none"))
 
             except ImportError:
                 st.bar_chart(df_up["Yulduz"].value_counts().sort_index())
