@@ -334,9 +334,9 @@ def detect_aspects(text: str, score: int = None):
                 for char in ["’", "‘", "ʻ", "ʼ", "´", "`"]:
                     text_lower = text_lower.replace(char, "'")
                 
-                # Match keywords as whole words to avoid sub-word matching (like "zal" in "mazali")
+                # Match keywords starting at word boundaries (allowing suffixes, e.g. "taom" matches "taomlari")
                 for kw in ASPECT_KEYWORDS.get(asp, []):
-                    pattern = rf"(?<![a-zA-Z']){re.escape(kw)}(?![a-zA-Z'])"
+                    pattern = rf"(?<![a-zA-Z']){re.escape(kw)}"
                     if re.search(pattern, text_lower):
                         matched_words.append(kw)
                 

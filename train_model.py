@@ -298,7 +298,7 @@ def train(csv_path: str = "data/reviews.csv", model_dir: str = "model"):
     print("\n8. Aspekt modellarini o'qitish va saqlash...")
     for aspect, keywords in ASPECT_KEYWORDS.items():
         y_aspect = df["Clean"].apply(
-            lambda text: 1 if any(bool(re.search(rf"(?<![a-zA-Z']){re.escape(kw)}(?![a-zA-Z'])", text)) for kw in keywords) else 0
+            lambda text: 1 if any(bool(re.search(rf"(?<![a-zA-Z']){re.escape(kw)}", text)) for kw in keywords) else 0
         ).values
         clf = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
         clf.fit(X, y_aspect)
