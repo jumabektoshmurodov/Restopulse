@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.8708,
+  "tolerance_1": 0.9785,
+  "mae": 0.16,
+  "train_size": 1296,
+  "test_size": 325,
+  "vocab_size": 8000,
+  "model_type": "Logistic Regression (multinomial)",
+  "scale": "1 to 5 stars",
+  "class_distribution": {
+    "1": 497,
+    "2": 225,
+    "3": 260,
+    "4": 267,
+    "5": 372
+  }
+}
