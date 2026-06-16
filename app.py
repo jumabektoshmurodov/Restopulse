@@ -257,6 +257,7 @@ WORD_MAP = {
     "xodim":("xizmat","n"), "buyurtma":("xizmat","n"),
     "muloyim emas":("xizmat","neg"), "iltifotli emas":("xizmat","neg"),
     "e'tiborli emas":("xizmat","neg"), "tez emas":("xizmat","neg"),
+    "yaxshimas":("xizmat","neg"), "yaxshi emas":("xizmat","neg"), "yomon xizmat":("xizmat","neg"),
     "muloyim":("xizmat","p"), "iltifotli":("xizmat","p"),
     "professional":("xizmat","p"), "tez bo'ldi":("xizmat","p"),
     "e'tiborli":("xizmat","p"), "yaxshi xizmat":("xizmat","p"),
@@ -345,23 +346,32 @@ def detect_aspects(text: str, score: int = None):
                 
                 meta = ASPECT_META.get(asp, {"icon": "💬", "label": asp})
                 
-                if score >= 4:
-                    praises.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
-                elif score <= 2:
-                    complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
-                else:
-                    # 3 stars: check if we match negative keywords/phrases in the raw text
-                    is_neg = False
-                    neg_word = display_word
-                    for phrase, (asp_map, polarity) in WORD_MAP.items():
-                        if asp_map == asp and polarity == "neg":
-                            if phrase in text_lower:
-                                is_neg = True
-                                neg_word = phrase
+                # Determine aspect sentiment (Praise vs. Complaint) using local lexicon first, then overall score
+                aspect_sentiment = None
+                matched_phrase = display_word
+                
+                # Check for explicit negative/positive phrases from WORD_MAP in the text
+                for phrase, (asp_map, polarity) in WORD_MAP.items():
+                    if asp_map == asp:
+                        if phrase in text_lower:
+                            aspect_sentiment = polarity
+                            matched_phrase = phrase
+                            # Prioritize negative polarity if multiple phrases match (for safety)
+                            if polarity == "neg":
                                 break
-                    if is_neg:
-                        complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": neg_word})
+                                
+                if aspect_sentiment == "neg":
+                    complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": matched_phrase})
+                elif aspect_sentiment == "p":
+                    praises.append({"aspect": meta["label"], "icon": meta["icon"], "word": matched_phrase})
+                else:
+                    # Fallback to overall rating score if no explicit lexicon matches
+                    if score >= 4:
+                        praises.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
+                    elif score <= 2:
+                        complaints.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
                     else:
+                        # For 3 stars without lexicon match, default to praise
                         praises.append({"aspect": meta["label"], "icon": meta["icon"], "word": display_word})
                         
     return found_aspects, complaints, praises

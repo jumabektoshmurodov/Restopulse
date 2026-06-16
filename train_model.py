@@ -103,6 +103,13 @@ def rule_based_sentiment(text):
             val = positive_words[word]
         elif word in negative_words:
             val = negative_words[word]
+        elif word.endswith("mas") and len(word) > 3:
+            # Check if root without "mas" is positive or negative
+            root = word[:-3]
+            if root in positive_words:
+                val = -positive_words[root]
+            elif root in negative_words:
+                val = -negative_words[root]
             
         # O'ZBEK TILI INKOR QOIDASI: Agar so'zdan keyin "emas" yoki "yo'q" kelsa
         if i + 1 < len(words) and words[i+1] in ['emas', "yo'q"]:
