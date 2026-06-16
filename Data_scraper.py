@@ -24,12 +24,12 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # ─────────────────────────────────────────
 
 SEARCH_QUERIES = [
-    "New Bukhara Premium"
+    "Soy Restaurant"
 ]
 
 MAX_PLACES_PER_QUERY  = 5  # Har qidiruv uchun joylar soni
 MAX_REVIEWS_PER_PLACE = 50  # Har joydan sharhlar soni
-OUTPUT_FILE = "test_reviews.csv"
+OUTPUT_FILE = "real_test_reviews.csv"
 HEADLESS    = False           # False = brauzer ko'rinadi (tavsiya)
 SKIP_ALREADY_SCRAPED = True   # True = oldin olingan joylarni o'tkazib yuborish, False = o'tkazib yubormaslik
 
